@@ -25,10 +25,17 @@ async function run() {
 
         app.get('/services', async (req, res) => {
             const query = {};
-            const cursor = serviceCollection.find(query);
-            const services = await cursor.toArray();
-            res.send(services)
+            const limit = 3;
+            if (req?.query?.limit === 'all') {
+                const services = await serviceCollection.find(query).toArray();
+                res.send(services)
+            }
+            else {
+                const services = await serviceCollection.find(query).limit(limit).skip(0).toArray();
+                res.send(services)
+            }
         })
+
 
         app.get('/services/:id', async (req, res) => {
             const id = req.params.id;
@@ -52,6 +59,7 @@ async function run() {
             res.send(reviews);
         })
 
+
         // reviews post 
         app.post('/reviews', async (req, res) => {
             const review = req.body;
@@ -62,22 +70,21 @@ async function run() {
         // Add Service post 
         app.post('/addservice', async (req, res) => {
             const addservice = req.body;
-            const result = await orderCollection.insertOne(addservice);
+            const result = await serviceCollection.insertOne(addservice);
             res.send(result)
         })
 
         // update
 
-        app.patch('/reviews/:id', async (req, res) => {
+        app.put('/reviews/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const status = req.body.status;
-            const updateDoc = {
-                $set: {
-                    status: status
-                }
+            const filter = { _id: ObjectId(id) };
+            const review = req.body;
+            const option = { upsert: true };
+            const updateMessege = {
+                $set: review
             }
-            const result = await orderCollection.updateOne(query, updateDoc);
+            const result = await orderCollection.updateOne(filter, updateMessege, option);
             res.send(result);
         })
         // delete 
